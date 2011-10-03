@@ -1,21 +1,28 @@
 import os, sys
 import pygame
 
+SHOT_BG_POSITION = 60, 440
+SHOT_POSITION = 60, 440
+
 class Gun(object):
     def __init__(self, surface):
         self.surface = surface 
         self.mouseImg = pygame.image.load(os.path.join('media', 'crosshairs.png'))
         self.mousePos = (0,0)
-        self.sounds = {
-            'blast': os.path.join('media', 'blast.mp3'),
-            'drop': os.path.join('media', 'drop.mp3'),
-            'hit': os.path.join('media', 'hit.mp3'),
-            'point': os.path.join('media', 'point.mp3'),
-            'quack': os.path.join('media', 'quack.mp3')}
         self.rounds = 3
+        self.blastSound = os.path.join('media', 'blast.mp3')
+        self.shotImgs = pygame.image.load(os.path.join('media', 'screenobjects.png'))
 
     def render(self):
         self.surface.blit(self.mouseImg, self.mousePos)
+        self.surface.blit(self.shotImgs, SHOT_POSITION, (0, 43, 70, 43))
+
+        # Show the rounds left
+        startingX, startingY = SHOT_POSITION
+        for i in range(self.rounds):
+            x = startingX + 10 + (i * 20)
+            y = startingY + 5
+            self.surface.blit(self.shotImgs, (x, y), (200, 59, 13, 17))
 
     def reloadIt(self):
         self.rounds = 3
@@ -30,7 +37,7 @@ class Gun(object):
         if self.rounds <= 0:
             return False
 
-        pygame.mixer.music.load(self.sounds['blast'])
+        pygame.mixer.music.load(self.blastSound)
         pygame.mixer.music.play()
         self.rounds = self.rounds - 1
         return True
