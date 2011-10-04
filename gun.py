@@ -3,10 +3,12 @@ import pygame
 
 SHOT_BG_POSITION = 60, 440
 SHOT_POSITION = 60, 440
+SHOT_RECT = 0, 43, 70, 43
+BULLET_RECT = 200, 59, 13, 17
 
 class Gun(object):
     def __init__(self, surface):
-        self.surface = surface 
+        self.surface = surface
         self.mouseImg = pygame.image.load(os.path.join('media', 'crosshairs.png'))
         self.mousePos = (0,0)
         self.rounds = 3
@@ -15,14 +17,14 @@ class Gun(object):
 
     def render(self):
         self.surface.blit(self.mouseImg, self.mousePos)
-        self.surface.blit(self.shotImgs, SHOT_POSITION, (0, 43, 70, 43))
+        self.surface.blit(self.shotImgs, SHOT_POSITION, SHOT_RECT)
 
         # Show the rounds left
         startingX, startingY = SHOT_POSITION
         for i in range(self.rounds):
             x = startingX + 10 + (i * 20)
             y = startingY + 5
-            self.surface.blit(self.shotImgs, (x, y), (200, 59, 13, 17))
+            self.surface.blit(self.shotImgs, (x, y), BULLET_RECT)
 
     def reloadIt(self):
         self.rounds = 3
