@@ -4,11 +4,16 @@ import gun, duck
 from gun import Gun
 from duck import Duck
 
-HIT_POSITION = 255, 440
+HIT_POSITION = 245, 440
 HIT_RECT = 0, 0, 287, 43
-HIT_DUCK_POSITION = 339, 445
+HIT_DUCK_POSITION = 329, 445
 HIT_DUCK_WHITE_RECT = 217, 43, 19, 16
 HIT_DUCK_RED_RECT = 199, 43, 19, 16
+SCORE_POSITION = 620, 440
+SCORE_RECT = 69, 43, 128, 43
+FONT = os.path.join('media', 'arcadeclassic.ttf')
+FONT_STARTING_POSITION = 730, 442
+ROUND_POSITION = 60, 410
 
 class Driver(object):
     def __init__(self, surface):
@@ -32,13 +37,12 @@ class Driver(object):
             gunFired = self.gun.shoot()
             for duck in self.ducks:
                 if gunFired:
-                    if (duck.isShot(event.pos)):
+                    if duck.isShot(event.pos):
                         self.score += 10
                         self.hitDucks[self.hitDuckIndex] = True
                         self.hitDuckIndex += 1
                 else:
                     duck.flyOff = True
-                    self.hitDuckIndex += 1
 
     def update(self):
         allDone = False
@@ -50,10 +54,16 @@ class Driver(object):
         self.manageRound()
 
     def render(self):
+        # Show the ducks
         for duck in self.ducks:
             duck.render()
 
-        # Update game controls
+        # Show round number
+        font = pygame.font.Font(FONT, 20)
+        text = font.render(("R= %d" % self.round), True, (154, 233, 0), (0, 0, 0));
+        self.surface.blit(text, ROUND_POSITION);
+
+        # Show the hit counter
         self.surface.blit(self.controlImgs, HIT_POSITION, HIT_RECT)
         startingX, startingY = HIT_DUCK_POSITION
         for i in range(10):
@@ -64,6 +74,15 @@ class Driver(object):
             else:
                 self.surface.blit(self.controlImgs, (x, y), HIT_DUCK_WHITE_RECT)
 
+        # Show the score
+        self.surface.blit(self.controlImgs, SCORE_POSITION, SCORE_RECT)
+        font = pygame.font.Font(FONT, 20)
+        text = font.render(str(self.score), True, (255, 255, 255));
+        x, y = FONT_STARTING_POSITION
+        x -= text.get_width();
+        self.surface.blit(text, (x,y));
+
+        # Show the cross hairs
         self.gun.render()
 
     def manageRound(self):
