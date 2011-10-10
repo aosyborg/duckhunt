@@ -1,0 +1,15 @@
+Duck Hunt Remake With Pygame
+============================
+
+Overview
+--------
+Duck Hunt is a fan remake of the classic NES game written in Python with Pygame.
+
+
+Installation
+------------
+Pygame must be installed first. On Ubuntu this can be done with simply:
+> sudo apt-get install pygame
+Alternately you can grab a copy from http://pygame.org and add it to the directory.
+To run the game, simply type:
+> python duckhunt.py
