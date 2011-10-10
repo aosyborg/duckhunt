@@ -6,8 +6,9 @@ FRAME_SIZE = 77, 70
 class Duck(object):
     def __init__(self, surface):
         self.surface = surface
-        self.image = pygame.image.load(os.path.join('media', 'duck.png'))
         self.imageReversed = False
+        self.image = pygame.image.load(os.path.join('media', 'duck.png'))
+        self.dropSound = os.path.join('media', 'drop.mp3')
         self.isDead = False
         self.isFinished = False
         self.flyOff = False
@@ -51,6 +52,10 @@ class Duck(object):
     def render(self):
         width, height = FRAME_SIZE
         x, y = self.position
+
+        # If we are finished, don't just return
+        if self.isFinished:
+            return
 
         # Set offsets
         xOffset, yOffset = FRAME_SIZE

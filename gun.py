@@ -9,11 +9,11 @@ BULLET_RECT = 200, 59, 13, 17
 class Gun(object):
     def __init__(self, surface):
         self.surface = surface
-        self.mouseImg = pygame.image.load(os.path.join('media', 'crosshairs.png'))
         self.mousePos = (0,0)
-        self.rounds = 3
-        self.blastSound = os.path.join('media', 'blast.mp3')
+        self.mouseImg = pygame.image.load(os.path.join('media', 'crosshairs.png'))
         self.shotImgs = pygame.image.load(os.path.join('media', 'screenobjects.png'))
+        self.blastSound = os.path.join('media', 'blast.mp3')
+        self.rounds = 3
 
     def render(self):
         self.surface.blit(self.mouseImg, self.mousePos)
