@@ -33,10 +33,12 @@ class Driver(object):
             for duck in self.ducks:
                 if gunFired:
                     if (duck.isShot(event.pos)):
-                        self.score = self.score + 10
+                        self.score += 10
+                        self.hitDucks[self.hitDuckIndex] = True
                         self.hitDuckIndex += 1
                 else:
                     duck.flyOff = True
+                    self.hitDuckIndex += 1
 
     def update(self):
         allDone = False
@@ -67,20 +69,27 @@ class Driver(object):
     def manageRound(self):
         timer = int(time.time())
 
-        for duck in self.ducks:
-            if duck.isDead:
-                self.hitDucks[self.hitDuckIndex] = True
-
         # Check round end
         timesUp = (timer - self.timer) > self.roundTime
         if not (timesUp or (self.ducks[0].isFinished and self.ducks[1].isFinished)):
             return
 
-        # Let any remaining ducks fly off, update hitDuck display
+        # Let any remaining ducks fly off
         for duck in self.ducks:
             if not duck.isFinished:
                 duck.flyOff = True
                 return
+
+        # Check for fly offs and increment the index
+        for duck in self.ducks:
+            if duck.flyOff:
+                self.hitDuckIndex += 1
+
+        # Start new around if duck index is at the end
+        if self.hitDuckIndex >= 9:
+            self.round += 1
+            self.hitDucks = [False for i in range(10)]
+            self.hitDuckIndex = 0
 
         # Populate screen with new ducks
         self.ducks = [Duck(self.surface), Duck(self.surface)]
