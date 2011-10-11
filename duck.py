@@ -20,25 +20,21 @@ class Duck(object):
         self.justShot = False
 
         # Find a starting position
-        x = random.randint(0, 1)
+        x = random.choice([0, surface.get_width()])
         y = random.randint(0, surface.get_height() / 2)
         self.position = x, y
 
         # Find direction
-        while True:
-            self.dx = random.randint(-4, 4)
-            self.dy = random.randint(-4, 4)
-            if not self.dx == 0 and not self.dy == 0:
-                break
+        self.changeDirection(1)
 
-    def update(self):
+    def update(self, round):
         self.frame = (self.frame + 1) % self.animationDelay
         x, y = self.position
 
         # Update position
         self.position = (x + self.dx), (y + self.dy)
-        if not self.isDead:
-            self.changeDirection()
+        if not self.isDead or not self.isFinished:
+            self.changeDirection(round)
 
         # If they have flown off they are good as dead to us
         frameWidth, frameHeight = FRAME_SIZE
@@ -46,7 +42,6 @@ class Duck(object):
         pastTop = (y + frameHeight) < 0
         pastRight = x > self.surface.get_width()
         if self.flyOff and (pastLeft or pastTop or pastRight):
-            self.isDead = True
             self.isFinished = True
 
     def render(self):
@@ -112,9 +107,11 @@ class Duck(object):
         self.dx = 0
         return True
 
-    def changeDirection(self):
+    def changeDirection(self, round):
         x, y = self.position
         frameWidth, frameHeight = FRAME_SIZE
+        speedRange = range(4+round, 6+round)
+        coinToss = 1 if random.randint(0, 1) else -1
 
         # Only update on key frames
         if not self.frame == 0:
@@ -123,7 +120,7 @@ class Duck(object):
         # At the left side of the screen
         if x <= 0 and not self.flyOff:
             while True:
-                self.dx = random.randint(2, 4)
+                self.dx = random.choice(speedRange)
                 self.dy = random.randint(-4, 4)
                 if not self.dy == 0:
                     break
@@ -131,7 +128,7 @@ class Duck(object):
         # At the right side of the screen
         elif (x + frameWidth) > self.surface.get_width() and not self.flyOff:
             while True:
-                self.dx = random.randint(-4, -2)
+                self.dx = random.choice(speedRange) * -1
                 self.dy = random.randint(-4, 4)
                 if not self.dy == 0:
                     break
@@ -139,7 +136,7 @@ class Duck(object):
         # At the top of the screen
         elif y <= 0 and not self.flyOff:
             while True:
-                self.dx = random.randint(-4, 4)
+                self.dx = random.choice(speedRange) * coinToss
                 self.dy = random.randint(2, 4)
                 if not self.dx == 0:
                     break
@@ -147,7 +144,7 @@ class Duck(object):
         # At the bottom of the screen
         elif y > (self.surface.get_height() / 2):
             while True:
-                self.dx = random.randint(-4, 4)
+                self.dx = random.choice(speedRange) * coinToss
                 self.dy = random.randint(-4, -2)
                 if not self.dx == 0:
                     break

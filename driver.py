@@ -61,7 +61,7 @@ class Driver(object):
         elif self.phase == 'shoot':
             # Update all ducks
             for duck in self.ducks:
-                duck.update()
+                duck.update(self.round)
             self.manageRound()
         elif self.phase == 'end':
             self.endRound()
@@ -132,7 +132,7 @@ class Driver(object):
 
         # Check for fly offs and increment the index
         for duck in self.ducks:
-            if duck.flyOff:
+            if not duck.isDead:
                 self.hitDuckIndex += 1
 
         # Start new around if duck index is at the end
