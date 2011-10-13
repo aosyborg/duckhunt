@@ -26,7 +26,7 @@ class Driver(object):
         self.gun = Gun(surface)
         self.ducks = [Duck(surface), Duck(surface)]
         self.round = 1
-        self.phase = 'start'
+        self.phase = 'gameover'
         self.score = 0
         self.timer = int(time.time())
         self.roundTime = 10 # Seconds in a round
@@ -36,8 +36,11 @@ class Driver(object):
         self.nextRoundSound = os.path.join('media', 'next-round.mp3')
         self.flyawaySound = os.path.join('media', 'flyaway.mp3')
         self.notices = ()
+        self.event = None
 
     def handleEvent(self, event):
+        self.event = event
+
         # If we are in the shooting phase, pass event off to the gun
         if event.type == pygame.MOUSEMOTION:
             self.gun.moveCrossHairs(event.pos)
@@ -65,6 +68,8 @@ class Driver(object):
             self.manageRound()
         elif self.phase == 'end':
             self.endRound()
+        elif self.phase == 'gameover':
+            self.gameOver()
 
     def render(self):
         # If there is a notice, display and return
@@ -165,7 +170,7 @@ class Driver(object):
             if i == False:
                 missedCount += 1
         if missedCount > 4:
-            self.notices = ("GAME OVER", "")
+            self.phase = "gameover"
             return
 
         # Prep for new round
@@ -174,3 +179,16 @@ class Driver(object):
         self.hitDuckIndex = 0
         self.phase = 'start'
         self.timer = int(time.time())
+
+    def gameOver(self):
+        self.notices = ("GAME OVER", "")
+        # Start a new game
+        if self.event.type == pygame.MOUSEBUTTONDOWN:
+            self.ducks = [Duck(self.surface), Duck(self.surface)]
+            self.round = 1
+            self.phase = 'start'
+            self.score = 0
+            self.timer = int(time.time())
+            self.hitDucks = [False for i in range(10)]
+            self.hitDuckIndex = 0
+            self.gun.reloadIt()
