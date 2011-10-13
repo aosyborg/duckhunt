@@ -1,20 +1,23 @@
 import os, sys, random
 import pygame
 
-FRAME_SIZE = 77, 70
+FRAME_SIZE = 81, 75
+XOFFSET, YOFFSET = 250, 225
+FLYOFF_YOFFSET = YOFFSET + 155
+FALL_YOFFSET = YOFFSET + 235
 
 class Duck(object):
     def __init__(self, surface):
         self.surface = surface
         self.imageReversed = False
-        self.image = pygame.image.load(os.path.join('media', 'duck.png'))
+        self.image = pygame.image.load(os.path.join('media', 'sprites.png'))
         self.dropSound = os.path.join('media', 'drop.mp3')
         self.isDead = False
         self.isFinished = False
         self.flyOff = False
 
         # Animation
-        self.animationDelay = 10
+        self.animationDelay = 8
         self.frame = 0
         self.animationFrame = 0
         self.justShot = False
@@ -53,17 +56,17 @@ class Duck(object):
             return
 
         # Set offsets
-        xOffset, yOffset = FRAME_SIZE
-        if not self.imageReversed:
-            xOffset = 0
+        xOffset = XOFFSET
+        yOffset = FLYOFF_YOFFSET if self.flyOff else YOFFSET
 
         # Only update animation on key frames
         if self.frame == 0:
-            self.animationFrame = (self.animationFrame + 1) % 4
+            self.animationFrame += 1
+        animationFrame = 1 if (self.animationFrame % 4 is 3) else (self.animationFrame % 4)
 
         # Animate flying
         if not self.isDead:
-            rect = ((width * self.animationFrame) + xOffset), 0, width, height
+            rect = ((width * animationFrame) + xOffset), yOffset, width, height
             self.surface.blit(self.image, self.position, rect)
 
         # Animate the duck drop
@@ -78,12 +81,12 @@ class Duck(object):
                     self.justShot = False
                 y -= self.dy
                 self.position = (x, y)
-                rect = (width * 4), height, width, height
+                rect = XOFFSET, FALL_YOFFSET, width, height
                 return self.surface.blit(self.image, self.position, rect)
 
             # Animate falling
             if y < (self.surface.get_height() / 2):
-                rect = (width * 4), 0, width, height
+                rect = (XOFFSET + width), FALL_YOFFSET, width, height
                 return self.surface.blit(self.image, self.position, rect)
             else:
                 self.isFinished = True
@@ -92,6 +95,10 @@ class Duck(object):
         x1, y1 = self.position
         x2, y2 = pos
         frameX, frameY = FRAME_SIZE
+
+        # If the duck is flying off, they can't be shot
+        if self.flyOff:
+            return False
 
         # If shot was outside the duck image
         if x2 < x1 or x2 > (x1 + frameX):
@@ -117,8 +124,15 @@ class Duck(object):
         if not self.frame == 0:
             return
 
+        # Set flyoff
+        if self.flyOff:
+            self.dx, self.dy = 0, -4
+            if self.imageReversed:
+                self.image = pygame.transform.flip(self.image, True, False)
+            return
+
         # At the left side of the screen
-        if x <= 0 and not self.flyOff:
+        if x <= 0:
             while True:
                 self.dx = random.choice(speedRange)
                 self.dy = random.randint(-4, 4)
@@ -126,7 +140,7 @@ class Duck(object):
                     break
 
         # At the right side of the screen
-        elif (x + frameWidth) > self.surface.get_width() and not self.flyOff:
+        elif (x + frameWidth) > self.surface.get_width():
             while True:
                 self.dx = random.choice(speedRange) * -1
                 self.dy = random.randint(-4, 4)
@@ -134,7 +148,7 @@ class Duck(object):
                     break
 
         # At the top of the screen
-        elif y <= 0 and not self.flyOff:
+        elif y <= 0:
             while True:
                 self.dx = random.choice(speedRange) * coinToss
                 self.dy = random.randint(2, 4)

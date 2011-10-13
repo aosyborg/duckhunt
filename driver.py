@@ -26,7 +26,7 @@ class Driver(object):
         self.gun = Gun(surface)
         self.ducks = [Duck(surface), Duck(surface)]
         self.round = 1
-        self.phase = 'gameover'
+        self.phase = 'start'
         self.score = 0
         self.timer = int(time.time())
         self.roundTime = 10 # Seconds in a round

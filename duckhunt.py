@@ -26,7 +26,7 @@ class Game(object):
         self.driver = Driver(self.surface)
 
     def handleEvent(self, event):
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key is 27):
             self.running = False
         else:
             self.driver.handleEvent(event)
