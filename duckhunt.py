@@ -1,7 +1,6 @@
 import os, sys
 import pygame
-import driver
-from driver import Driver
+import game.driver
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 500
 TITLE = "Symons Media: Duck Hunt"
@@ -23,7 +22,7 @@ class Game(object):
         pygame.display.set_caption(TITLE)
         pygame.mouse.set_visible(False)
         self.surface = pygame.display.set_mode(self.size)
-        self.driver = Driver(self.surface)
+        self.driver = game.driver.Driver(self.surface)
 
     def handleEvent(self, event):
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key is 27):
