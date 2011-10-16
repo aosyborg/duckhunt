@@ -6,6 +6,10 @@ from duck import Duck
 
 DOG_POSITION = 250, 350
 DOG_FRAME = 122, 110
+DOG_REPORT_POSITION = 450, 325
+DOG_LAUGH_RECT = 385, 120, 80, 85
+DOG_ONE_DUCK_RECT = 650, 0, 100, 100
+DOG_TWO_DUCKS_RECT = 630, 115, 120, 100
 HIT_POSITION = 245, 440
 HIT_RECT = 0, 0, 287, 43
 HIT_DUCK_POSITION = 329, 445
@@ -180,23 +184,32 @@ class PlayState(BaseState):
         super(PlayState, self).__init__()
         self.ducks = [Duck(self.registry), Duck(self.registry)]
         self.roundTime = 10 # Seconds in a round
+        self.frame = 0
+        self.dogCanComeOut = False
+        self.dogPosition = DOG_REPORT_POSITION
+        self.dogdy = 5
 
     def execute(self, event):
         if event.type == pygame.MOUSEMOTION:
             self.gun.moveCrossHairs(event.pos)
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            gunFired = self.gun.shoot()
+            hasFired = self.gun.shoot()
             for duck in self.ducks:
-                if gunFired:
-                    if duck.isShot(event.pos):
-                        self.registry.set('score', self.registry.get('score') + 10)
-                        self.hitDucks[self.hitDuckIndex] = True
-                        self.hitDuckIndex += 1
-                elif not duck.isDead:
+                if hasFired and duck.isShot(event.pos):
+                    self.registry.set('score', self.registry.get('score') + 10)
+                    self.hitDucks[self.hitDuckIndex] = True
+                    self.hitDuckIndex += 1
+                elif not duck.isDead and self.gun.rounds <= 0:
                      duck.flyOff = True
 
     def update(self):
         timer = int(time.time())
+
+        # Don't update anything if running dog sequences
+        if self.dogCanComeOut:
+            return
+
+        # Update the ducks
         for duck in self.ducks:
             duck.update()
 
@@ -220,18 +233,65 @@ class PlayState(BaseState):
         if self.hitDuckIndex >= 9:
             return RoundEndState(self.hitDucks)
 
-        # Populate screen with new ducks
-        self.ducks = [Duck(self.registry), Duck(self.registry)]
-        self.timer = timer
-        self.gun.reloadIt()
+        self.dogCanComeOut = True
 
     def render(self):
+        timer = int(time.time())
+        surface = self.registry.get('surface')
+        sprites = self.registry.get('sprites')
+
         # Show the controls
         self.renderControls()
 
         # Show the ducks
         for duck in self.ducks:
             duck.render()
+
+        # Show the dog
+        if self.dogCanComeOut:
+            self.frame += 3
+            ducksShot = 0
+            for duck in self.ducks:
+                if duck.isDead:
+                    ducksShot += 1
+
+            # One duck shot
+            if ducksShot == 1:
+                x2, y2, width, height = DOG_ONE_DUCK_RECT
+                if self.frame == 3:
+                    self.registry.get('soundHandler').enqueue('hit')
+
+            # Two ducks shot
+            elif ducksShot == 2:
+                x2, y2, width, height = DOG_TWO_DUCKS_RECT
+                if self.frame == 3:
+                    self.registry.get('soundHandler').enqueue('hit')
+
+            # No ducks shot
+            else:
+                x2, y2, width, height = DOG_LAUGH_RECT
+                if self.frame == 3:
+                    self.registry.get('soundHandler').enqueue('flyaway')
+
+            # Dog comes up and goes back down
+            x1, y1 = self.dogPosition
+            if self.frame < height:
+                self.dogPosition = x1, (y1 - 3)
+                height = self.frame
+            else:
+                self.dogPosition = x1, (y1 + 3)
+                height -= (self.frame - height)
+
+            # If dog is no longer visible, move on
+            if height <= 0:
+                self.dogPosition = DOG_REPORT_POSITION
+                self.frame = 0
+                self.dogCanComeOut = False
+                self.ducks = [Duck(self.registry), Duck(self.registry)]
+                self.timer = timer
+                self.gun.reloadIt()
+            else:
+                surface.blit(sprites, self.dogPosition, (x2, y2, width, height))
 
         # Show the cross hairs
         self.gun.render()
@@ -276,15 +336,19 @@ class RoundEndState(BaseState):
 class GameOverState(BaseState):
     def __init__(self):
         super(GameOverState, self).__init__()
+        self.state = None
 
     def execute(self, event):
-
         # Click to restart
         if event.type == pygame.MOUSEBUTTONDOWN:
-            return RoundStartState()
+            self.registry.set('score', 0)
+            self.registry.set('round', 1)
+            self.state = RoundStartState()
 
     def update(self):
         self.notices = ("GAMEOVER", "")
+        if self.state:
+            return self.state
 
     def render(self):
         self.renderNotices()
