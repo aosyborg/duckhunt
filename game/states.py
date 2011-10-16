@@ -112,6 +112,7 @@ class RoundStartState(BaseState):
         self.animationFrame = 0
         self.animationDelay = 10
         self.dogPosition = DOG_POSITION
+        self.barkCount = 0
 
     def execute(self, event):
         pass
@@ -154,6 +155,11 @@ class RoundStartState(BaseState):
             self.animationDelay = 16
             animationFrame = self.animationFrame % 5
             rect = ((width * animationFrame), height, width, height)
+
+            # Trigger barking
+            if (self.barkCount < 2) and not pygame.mixer.get_busy():
+                self.registry.get('soundHandler').enqueue('bark')
+                self.barkCount += 1
 
             # First Jump frame
             if (animationFrame == 1):
@@ -212,7 +218,6 @@ class PlayState(BaseState):
 
         # Start new around if duck index is at the end
         if self.hitDuckIndex >= 9:
-            self.registry.get('soundHandler').enqueue('nextround')
             return RoundEndState(self.hitDucks)
 
         # Populate screen with new ducks
@@ -234,14 +239,8 @@ class PlayState(BaseState):
 class RoundEndState(BaseState):
     def __init__(self, hitDucks):
         super(RoundEndState, self).__init__()
+        self.isGameOver = False
         self.hitDucks = hitDucks
-
-    def execute(self, event):
-        pass
-
-    def update(self):
-        while pygame.mixer.get_busy():
-            return
 
         # Count missed ducks
         missedCount = 0
@@ -250,12 +249,28 @@ class RoundEndState(BaseState):
                 missedCount += 1
         # Miss 4 or more and you're done
         if missedCount >= 4:
-            return GameOverState()
+            self.isGameOver = True
+            self.notices = ("GAMEOVER", "")
+            self.registry.get('soundHandler').enqueue('gameover')
+        else:
+            self.registry.get('soundHandler').enqueue('nextround')
 
-        self.registry.set('round', self.registry.get('round') + 1)
-        return RoundStartState()
+    def execute(self, event):
+        pass
+
+    def update(self):
+        # Wait for the sound to finish before allowing user to restart
+        while pygame.mixer.get_busy():
+            return
+
+        if self.isGameOver:
+            return GameOverState()
+        else:
+            self.registry.set('round', self.registry.get('round') + 1)
+            return RoundStartState()
 
     def render(self):
+        self.renderNotices()
         self.renderControls()
 
 class GameOverState(BaseState):
@@ -263,6 +278,8 @@ class GameOverState(BaseState):
         super(GameOverState, self).__init__()
 
     def execute(self, event):
+
+        # Click to restart
         if event.type == pygame.MOUSEBUTTONDOWN:
             return RoundStartState()
 
@@ -271,3 +288,4 @@ class GameOverState(BaseState):
 
     def render(self):
         self.renderNotices()
+        self.renderControls()

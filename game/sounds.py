@@ -13,9 +13,11 @@ class SoundHandler:
     def __init__(self):
         self.queue = set()
         self.sounds = {
-            'blast':     getSound("blast.ogg", 1.0),
+            'bark':      getSound("bark.ogg", 0.7),
+            'blast':     getSound("blast.ogg", 0.7),
             'drop':      getSound("drop.ogg", 0.2),
             'flyaway':   getSound("flyaway.ogg", 1.0),
+            'gameover':  getSound("gameover.ogg", 0.7),
             'hit':       getSound("hit.ogg", 1.0),
             'nextround': getSound("next-round.ogg", 1.0),
             'point':     getSound("point.ogg", 1.0),
