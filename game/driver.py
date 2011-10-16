@@ -18,6 +18,10 @@ class Driver(object):
         self.state = self.state.start()
 
     def handleEvent(self, event):
+        # Toggle sound
+        if event.type == pygame.KEYDOWN and event.key is pygame.K_s:
+            self.registry.get('soundHandler').toggleSound()
+
         self.state.execute(event)
 
     def update(self):

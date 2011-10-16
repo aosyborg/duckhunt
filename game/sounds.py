@@ -11,6 +11,7 @@ def getSound(name, volume):
 
 class SoundHandler:
     def __init__(self):
+        self.mute = False
         self.queue = set()
         self.sounds = {
             'bark':      getSound("bark.ogg", 0.7),
@@ -29,5 +30,9 @@ class SoundHandler:
 
     def flush(self):
         for sound in self.queue:
-            sound.play()
+            if not self.mute:
+                sound.play()
         self.queue.clear()
+
+    def toggleSound(self):
+        self.mute = not self.mute
