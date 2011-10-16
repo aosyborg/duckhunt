@@ -13,3 +13,9 @@ Pygame must be installed first. On Ubuntu this can be done with simply:
 Alternately you can grab a copy from http://pygame.org and add it to the directory.
 To run the game, simply type:
 > python duckhunt.py
+
+Controls
+--------
+- Use the mouse to aim and shoot
+- 's' toggles sound
+- 'Esc' quits the game
