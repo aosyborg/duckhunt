@@ -1,11 +1,19 @@
 import os, sys
 import pygame
-import game.driver
 
+# Game parameters
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 500
 TITLE = "Symons Media: Duck Hunt"
-CLOCK_TICK = 50
+FRAMES_PER_SEC = 40
 BG_COLOR = 255, 255, 255
+
+# Initialize pygame before importing modules
+pygame.mixer.pre_init(44100, -16, 2, 1024)
+pygame.init()
+pygame.display.set_caption(TITLE)
+pygame.mouse.set_visible(False)
+
+import game.driver
 
 class Game(object):
     def __init__(self):
@@ -18,9 +26,6 @@ class Game(object):
         self.driver = None
 
     def init(self):
-        pygame.init()
-        pygame.display.set_caption(TITLE)
-        pygame.mouse.set_visible(False)
         self.surface = pygame.display.set_mode(self.size)
         self.driver = game.driver.Driver(self.surface)
 
@@ -31,7 +36,7 @@ class Game(object):
             self.driver.handleEvent(event)
 
     def loop(self):
-        self.clock.tick(CLOCK_TICK)
+        self.clock.tick(FRAMES_PER_SEC)
         self.driver.update()
 
     def render(self):

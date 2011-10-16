@@ -7,14 +7,13 @@ FLYOFF_YOFFSET = YOFFSET + 155
 FALL_YOFFSET = YOFFSET + 235
 
 class Duck(object):
-    def __init__(self, surface):
-        self.surface = surface
+    def __init__(self, registry):
+        self.registry = registry
         self.imageReversed = False
-        self.image = pygame.image.load(os.path.join('media', 'sprites.png'))
-        self.dropSound = os.path.join('media', 'drop.mp3')
         self.isDead = False
         self.isFinished = False
         self.flyOff = False
+        self.sprites = registry.get('sprites')
 
         # Animation
         self.animationDelay = 8
@@ -23,31 +22,34 @@ class Duck(object):
         self.justShot = False
 
         # Find a starting position
+        surface = registry.get('surface')
         x = random.choice([0, surface.get_width()])
         y = random.randint(0, surface.get_height() / 2)
         self.position = x, y
 
         # Find direction
-        self.changeDirection(1)
+        self.changeDirection()
 
-    def update(self, round):
+    def update(self):
+        surface = self.registry.get('surface')
         self.frame = (self.frame + 1) % self.animationDelay
         x, y = self.position
 
         # Update position
         self.position = (x + self.dx), (y + self.dy)
         if not self.isDead or not self.isFinished:
-            self.changeDirection(round)
+            self.changeDirection()
 
         # If they have flown off they are good as dead to us
         frameWidth, frameHeight = FRAME_SIZE
         pastLeft = (x + frameWidth) < 0
         pastTop = (y + frameHeight) < 0
-        pastRight = x > self.surface.get_width()
+        pastRight = x > surface.get_width()
         if self.flyOff and (pastLeft or pastTop or pastRight):
             self.isFinished = True
 
     def render(self):
+        surface = self.registry.get('surface')
         width, height = FRAME_SIZE
         x, y = self.position
 
@@ -67,12 +69,12 @@ class Duck(object):
         # Animate flying
         if not self.isDead:
             rect = ((width * animationFrame) + xOffset), yOffset, width, height
-            self.surface.blit(self.image, self.position, rect)
+            surface.blit(self.sprites, self.position, rect)
 
         # Animate the duck drop
         else:
             if self.imageReversed:
-                self.image = pygame.transform.flip(self.image, True, False)
+                self.sprites = pygame.transform.flip(self.sprites, True, False)
                 self.imageReversed = False
 
             # First frame is special
@@ -82,12 +84,12 @@ class Duck(object):
                 y -= self.dy
                 self.position = (x, y)
                 rect = XOFFSET, FALL_YOFFSET, width, height
-                return self.surface.blit(self.image, self.position, rect)
+                return surface.blit(self.sprites, self.position, rect)
 
             # Animate falling
-            if y < (self.surface.get_height() / 2):
+            if y < (surface.get_height() / 2):
                 rect = (XOFFSET + width), FALL_YOFFSET, width, height
-                return self.surface.blit(self.image, self.position, rect)
+                return surface.blit(self.sprites, self.position, rect)
             else:
                 self.isFinished = True
 
@@ -96,8 +98,8 @@ class Duck(object):
         x2, y2 = pos
         frameX, frameY = FRAME_SIZE
 
-        # If the duck is flying off, they can't be shot
-        if self.flyOff:
+        # If the duck is already dead or flying off, they can't be shot
+        if self.flyOff or self.isDead:
             return False
 
         # If shot was outside the duck image
@@ -114,10 +116,12 @@ class Duck(object):
         self.dx = 0
         return True
 
-    def changeDirection(self, round):
-        x, y = self.position
+    def changeDirection(self):
+        surface = self.registry.get('surface')
+        round = self.registry.get('round')
         frameWidth, frameHeight = FRAME_SIZE
         speedRange = range(4+round, 6+round)
+        x, y = self.position
         coinToss = 1 if random.randint(0, 1) else -1
 
         # Only update on key frames
@@ -128,7 +132,7 @@ class Duck(object):
         if self.flyOff:
             self.dx, self.dy = 0, -4
             if self.imageReversed:
-                self.image = pygame.transform.flip(self.image, True, False)
+                self.sprites = pygame.transform.flip(self.sprites, True, False)
             return
 
         # At the left side of the screen
@@ -140,7 +144,7 @@ class Duck(object):
                     break
 
         # At the right side of the screen
-        elif (x + frameWidth) > self.surface.get_width():
+        elif (x + frameWidth) > surface.get_width():
             while True:
                 self.dx = random.choice(speedRange) * -1
                 self.dy = random.randint(-4, 4)
@@ -156,7 +160,7 @@ class Duck(object):
                     break
 
         # At the bottom of the screen
-        elif y > (self.surface.get_height() / 2):
+        elif y > (surface.get_height() / 2):
             while True:
                 self.dx = random.choice(speedRange) * coinToss
                 self.dy = random.randint(-4, -2)
@@ -166,7 +170,7 @@ class Duck(object):
         # Reverse image if duck is flying opposite direction
         if self.dx < 0 and not self.imageReversed:
             self.imageReversed = True
-            self.image = pygame.transform.flip(self.image, True, False)
+            self.sprites = pygame.transform.flip(self.sprites, True, False)
         elif self.dx > 0 and self.imageReversed:
             self.imageReversed = False
-            self.image = pygame.transform.flip(self.image, True, False)
+            self.sprites = pygame.transform.flip(self.sprites, True, False)
