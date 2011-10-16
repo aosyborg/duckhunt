@@ -113,8 +113,7 @@ class Duck(object):
         self.isDead = True
         self.justShot = True
         self.frame = 1
-        self.dy = 4
-        self.dx = 0
+        self.dx, self.dy = 0, 4
         return True
 
     def changeDirection(self):
@@ -132,6 +131,13 @@ class Duck(object):
         # Set flyoff
         if self.flyOff:
             self.dx, self.dy = 0, -4
+            if self.imageReversed:
+                self.sprites = pygame.transform.flip(self.sprites, True, False)
+            return
+
+        # Die!
+        if self.isDead:
+            self.dx, self.dy = 0, 4
             if self.imageReversed:
                 self.sprites = pygame.transform.flip(self.sprites, True, False)
             return
