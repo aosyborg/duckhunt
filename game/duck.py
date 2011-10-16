@@ -92,6 +92,7 @@ class Duck(object):
                 return surface.blit(self.sprites, self.position, rect)
             else:
                 self.isFinished = True
+                self.registry.get('soundHandler').enqueue('drop')
 
     def isShot(self, pos):
         x1, y1 = self.position

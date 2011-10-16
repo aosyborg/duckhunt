@@ -14,7 +14,7 @@ class SoundHandler:
         self.queue = set()
         self.sounds = {
             'blast':     getSound("blast.ogg", 1.0),
-            'drop':      getSound("drop.ogg", 0.7),
+            'drop':      getSound("drop.ogg", 0.2),
             'flyaway':   getSound("flyaway.ogg", 1.0),
             'hit':       getSound("hit.ogg", 1.0),
             'nextround': getSound("next-round.ogg", 1.0),
