@@ -4,6 +4,8 @@ import sounds
 from gun import Gun
 from duck import Duck
 
+DOG_POSITION = 250, 350
+DOG_FRAME = 122, 110
 HIT_POSITION = 245, 440
 HIT_RECT = 0, 0, 287, 43
 HIT_DUCK_POSITION = 329, 445
@@ -13,6 +15,9 @@ SCORE_POSITION = 620, 440
 SCORE_RECT = 69, 43, 130, 43
 FONT = os.path.join('media', 'arcadeclassic.ttf')
 FONT_STARTING_POSITION = 730, 442
+FONT_GREEN = 154, 233, 0
+FONT_BLACK = 0, 0, 0
+FONT_WHITE = 255, 255, 255
 ROUND_POSITION = 60, 410
 SHOT_BG_POSITION = 60, 440
 SHOT_POSITION = 60, 440
@@ -32,6 +37,9 @@ class BaseState(object):
         self.registry = registry
         self.timer = int(time.time())
         self.notices = set()
+        self.gun = Gun(self.registry)
+        self.hitDucks = [False for i in range(10)]
+        self.hitDuckIndex = 0
 
     def renderNotices(self):
         if len(self.notices) is 0:
@@ -59,7 +67,7 @@ class BaseState(object):
 
         # Show round number
         font = pygame.font.Font(FONT, 20)
-        text = font.render(("R= %d" % round), True, (154, 233, 0), (0, 0, 0));
+        text = font.render(("R= %d" % round), True, FONT_GREEN, FONT_BLACK);
         surface.blit(text, ROUND_POSITION);
 
         # Show the bullets
@@ -84,7 +92,7 @@ class BaseState(object):
         # Show the score
         surface.blit(img, SCORE_POSITION, SCORE_RECT)
         font = pygame.font.Font(FONT, 20)
-        text = font.render(str(self.registry.get('score')), True, (255, 255, 255));
+        text = font.render(str(self.registry.get('score')), True, FONT_WHITE);
         x, y = FONT_STARTING_POSITION
         x -= text.get_width();
         surface.blit(text, (x,y));
@@ -100,27 +108,72 @@ class StartState(BaseState):
 class RoundStartState(BaseState):
     def __init__(self):
         super(RoundStartState, self).__init__()
+        self.frame = 1
+        self.animationFrame = 0
+        self.animationDelay = 10
+        self.dogPosition = DOG_POSITION
 
     def execute(self, event):
         pass
 
     def update(self):
-        self.notices = ("ROUND", self.registry.get('round'))
         timer = int(time.time())
+
+        # The whole animation only takes two seconds so move to play state after its done
         if (timer - self.timer) > 2:
+            self.showNotice = False
             return PlayState()
 
+        # Update frame count and set notice
+        self.notices = ("ROUND", self.registry.get('round'))
+        self.frame += 1
+
     def render(self):
+        timer = int(time.time())
+        surface = self.registry.get('surface')
+        sprites = self.registry.get('sprites')
+        x, y = self.dogPosition
+        width, height = DOG_FRAME
+
+        # Always have round + controls
         self.renderNotices()
+        self.renderControls()
+
+        # Update animation frame
+        if (self.frame % 15) == 0:
+            self.animationFrame += 1
+
+        # First the dog walks/sniffs
+        if self.animationFrame < 5:
+            x += 1
+            self.dogPosition = (x, y)
+            rect = ((width * self.animationFrame), 0, width, height)
+
+        # Then the dog jumps
+        else:
+            self.animationDelay = 16
+            animationFrame = self.animationFrame % 5
+            rect = ((width * animationFrame), height, width, height)
+
+            # First Jump frame
+            if (animationFrame == 1):
+                self.dogPosition = (x + 5), (y - 10)
+
+            # Second jump frame
+            elif (animationFrame == 2):
+                self.dogPosition = (x + 5), (y + 5)
+
+            elif (animationFrame > 2):
+                return # Animation is over
+
+        # Add the dog
+        surface.blit(sprites, self.dogPosition, rect)
 
 class PlayState(BaseState):
     def __init__(self):
         super(PlayState, self).__init__()
-        self.gun = Gun(self.registry)
         self.ducks = [Duck(self.registry), Duck(self.registry)]
         self.roundTime = 10 # Seconds in a round
-        self.hitDucks = [False for i in range(10)]
-        self.hitDuckIndex = 0
 
     def execute(self, event):
         if event.type == pygame.MOUSEMOTION:
@@ -182,7 +235,6 @@ class RoundEndState(BaseState):
     def __init__(self, hitDucks):
         super(RoundEndState, self).__init__()
         self.hitDucks = hitDucks
-        self.gun = Gun(self.registry)
 
     def execute(self, event):
         pass

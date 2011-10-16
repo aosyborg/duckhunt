@@ -4,7 +4,7 @@ import pygame
 # Game parameters
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 500
 TITLE = "Symons Media: Duck Hunt"
-FRAMES_PER_SEC = 40
+FRAMES_PER_SEC = 50
 BG_COLOR = 255, 255, 255
 
 # Initialize pygame before importing modules
