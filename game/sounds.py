@@ -36,3 +36,5 @@ class SoundHandler:
 
     def toggleSound(self):
         self.mute = not self.mute
+        if self.mute:
+            pygame.mixer.stop()
