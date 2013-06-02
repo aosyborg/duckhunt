@@ -1,8 +1,10 @@
 import os, sys
 import pygame
+import pygame.transform
+from game.registry import adjpos, adjrect, adjwidth, adjheight
 
 # Game parameters
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 500
+SCREEN_WIDTH, SCREEN_HEIGHT = adjpos (800, 500)
 TITLE = "Symons Media: Duck Hunt"
 FRAMES_PER_SEC = 50
 BG_COLOR = 255, 255, 255
@@ -22,7 +24,8 @@ class Game(object):
         self.clock = pygame.time.Clock()
         self.size = SCREEN_WIDTH, SCREEN_HEIGHT
         background = os.path.join('media', 'background.jpg')
-        self.background = pygame.image.load(background)
+        bg = pygame.image.load(background)
+        self.background = pygame.transform.smoothscale (bg, self.size)
         self.driver = None
 
     def init(self):

@@ -1,12 +1,15 @@
 import os, sys, random
 import pygame
+import states
+from registry import adjpos, adjrect, adjwidth, adjheight
 
-FRAME_SIZE = 81, 75
-XOFFSET, YOFFSET = 250, 225
-FLYOFF_YOFFSET = YOFFSET + 155
-FALL_YOFFSET = YOFFSET + 235
+FRAME_SIZE = adjpos (81, 75)
+XOFFSET, YOFFSET = adjpos (250, 225)
+FLYOFF_YOFFSET = YOFFSET + adjheight (155)
+FALL_YOFFSET = YOFFSET + adjheight (235)
 
 class Duck(object):
+
     def __init__(self, registry):
         self.registry = registry
         self.imageReversed = False
@@ -14,6 +17,7 @@ class Duck(object):
         self.isFinished = False
         self.flyOff = False
         self.sprites = registry.get('sprites')
+        self.rsprites = registry.get('rsprites')
 
         # Animation
         self.animationDelay = 8
@@ -69,14 +73,10 @@ class Duck(object):
         # Animate flying
         if not self.isDead:
             rect = ((width * animationFrame) + xOffset), yOffset, width, height
-            surface.blit(self.sprites, self.position, rect)
+            surface.blit(self.rsprites if self.imageReversed else self.sprites, self.position, rect)
 
         # Animate the duck drop
         else:
-            if self.imageReversed:
-                self.sprites = pygame.transform.flip(self.sprites, True, False)
-                self.imageReversed = False
-
             # First frame is special
             if self.justShot:
                 if self.frame == 0:
@@ -113,7 +113,7 @@ class Duck(object):
         self.isDead = True
         self.justShot = True
         self.frame = 1
-        self.dx, self.dy = 0, 4
+        self.dx, self.dy = adjpos (0, 4)
         return True
 
     def changeDirection(self):
@@ -130,16 +130,12 @@ class Duck(object):
 
         # Set flyoff
         if self.flyOff:
-            self.dx, self.dy = 0, -4
-            if self.imageReversed:
-                self.sprites = pygame.transform.flip(self.sprites, True, False)
+            self.dx, self.dy = adjpos (0, -4)
             return
 
         # Die!
         if self.isDead:
-            self.dx, self.dy = 0, 4
-            if self.imageReversed:
-                self.sprites = pygame.transform.flip(self.sprites, True, False)
+            self.dx, self.dy = adjpos (0, 4)
             return
 
         # At the left side of the screen
@@ -147,6 +143,7 @@ class Duck(object):
             while True:
                 self.dx = random.choice(speedRange)
                 self.dy = random.randint(-4, 4)
+                self.dx, self.dy = adjpos (self.dx, self.dy)
                 if not self.dy == 0:
                     break
 
@@ -155,6 +152,7 @@ class Duck(object):
             while True:
                 self.dx = random.choice(speedRange) * -1
                 self.dy = random.randint(-4, 4)
+                self.dx, self.dy = adjpos (self.dx, self.dy)
                 if not self.dy == 0:
                     break
 
@@ -163,6 +161,7 @@ class Duck(object):
             while True:
                 self.dx = random.choice(speedRange) * coinToss
                 self.dy = random.randint(2, 4)
+                self.dx, self.dy = adjpos (self.dx, self.dy)
                 if not self.dx == 0:
                     break
 
@@ -171,13 +170,12 @@ class Duck(object):
             while True:
                 self.dx = random.choice(speedRange) * coinToss
                 self.dy = random.randint(-4, -2)
+                self.dx, self.dy = adjpos (self.dx, self.dy)
                 if not self.dx == 0:
                     break
 
         # Reverse image if duck is flying opposite direction
         if self.dx < 0 and not self.imageReversed:
             self.imageReversed = True
-            self.sprites = pygame.transform.flip(self.sprites, True, False)
         elif self.dx > 0 and self.imageReversed:
             self.imageReversed = False
-            self.sprites = pygame.transform.flip(self.sprites, True, False)
